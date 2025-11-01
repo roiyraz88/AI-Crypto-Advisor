@@ -2,9 +2,7 @@ import { Response } from "express";
 import { AuthRequest } from "../middleware/requireAuth";
 import { Preferences } from "../models/Preferences";
 
-/**
- * Get user preferences
- */
+
 export const getPreferences = async (
   req: AuthRequest,
   res: Response
@@ -18,7 +16,6 @@ export const getPreferences = async (
       return;
     }
 
-    // Find user preferences
     const preferences = await Preferences.findOne({ userId: req.user.id });
 
     if (!preferences) {
@@ -50,9 +47,6 @@ export const getPreferences = async (
   }
 };
 
-/**
- * Save or update user preferences
- */
 export const savePreferences = async (
   req: AuthRequest,
   res: Response
@@ -69,11 +63,9 @@ export const savePreferences = async (
     const { experienceLevel, riskTolerance, investmentGoals, favoriteCryptos, contentTypes } =
       req.body;
 
-    // Find or create preferences
     let preferences = await Preferences.findOne({ userId: req.user.id });
 
     if (preferences) {
-      // Update existing preferences
       preferences.experienceLevel = experienceLevel;
       preferences.riskTolerance = riskTolerance;
       preferences.investmentGoals = investmentGoals;

@@ -1,7 +1,4 @@
-/**
- * AI Service using OpenRouter API
- * Provides AI-powered crypto analysis and recommendations
- */
+
 
 interface OpenRouterMessage {
   role: "system" | "user" | "assistant";
@@ -16,9 +13,7 @@ interface OpenRouterResponse {
   choices: OpenRouterChoice[];
 }
 
-/**
- * Get AI analysis based on user preferences and market data
- */
+
 export const getAIAnalysis = async (
   preferences: {
     experienceLevel: string;
@@ -35,7 +30,6 @@ export const getAIAnalysis = async (
 
     const systemPrompt = `You are an expert cryptocurrency advisor. Provide personalized, concise, and actionable advice based on user preferences and current market data. Keep responses under 200 words. When possible, give a short 2-3 bullet tactical suggestion and one broader strategic idea.`;
 
-    // Create a contextual hint based on experience and risk
     const experienceHint = (() => {
       switch (preferences.experienceLevel) {
         case "beginner":
@@ -111,9 +105,7 @@ export const getAIAnalysis = async (
   }
 };
 
-/**
- * AI Fallback - works if API key missing, rate limit, or offline
- */
+
 const fallbackAIAdvice = (preferences: {
   experienceLevel: string;
   riskTolerance: string;

@@ -6,10 +6,7 @@ import { voteSchema } from "../utils/validation";
 
 const router = Router();
 
-/**
- * POST /vote
- * Save thumbs up/down vote (protected)
- */
+
 router.post("/vote", requireAuth, validate(voteSchema), saveVote);
 
 export default router;

@@ -74,7 +74,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   fetchUser: async () => {
     try {
       set({ isLoading: true });
-      const res = await authApi.getMe(); // אם 401, האינטרספטור ינסה refresh
+      const res = await authApi.getMe(); 
       if (res.success && res.data) {
         set({ user: res.data.user, isAuthenticated: true, isLoading: false, error: null });
         await usePreferencesStore.getState().fetchPreferences().catch(() => {});

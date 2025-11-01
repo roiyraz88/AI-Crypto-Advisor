@@ -1,11 +1,7 @@
 import { AxiosError } from "axios";
 
-/**
- * User-friendly error handler utility
- * Extracts meaningful error messages from API responses
- */
+
 export const getErrorMessage = (error: unknown): string => {
-  // Handle Axios errors
   if (error instanceof Error && "response" in error) {
     const axiosError = error as AxiosError<{
       success?: boolean;
@@ -15,12 +11,10 @@ export const getErrorMessage = (error: unknown): string => {
     const status = axiosError.response?.status;
     const errorData = axiosError.response?.data;
 
-    // Try to get error message from response
     if (errorData?.error?.message) {
       return errorData.error.message;
     }
 
-    // Fallback to generic messages based on status code
     switch (status) {
       case 400:
         return "Invalid request. Please check your input and try again.";
@@ -45,9 +39,7 @@ export const getErrorMessage = (error: unknown): string => {
     }
   }
 
-  // Handle standard Error objects
   if (error instanceof Error) {
-    // Don't show technical error messages to users
     const message = error.message.toLowerCase();
 
     if (message.includes("network")) {
@@ -62,17 +54,13 @@ export const getErrorMessage = (error: unknown): string => {
       return "Server error. Please try again.";
     }
 
-    // Return generic message for other errors
     return "Something went wrong. Please try again.";
   }
 
-  // Default fallback
   return "An unexpected error occurred. Please try again.";
 };
 
-/**
- * Check if error is a network error
- */
+
 export const isNetworkError = (error: unknown): boolean => {
   if (error instanceof Error) {
     const message = error.message.toLowerCase();
@@ -85,9 +73,7 @@ export const isNetworkError = (error: unknown): boolean => {
   return false;
 };
 
-/**
- * Check if error is a validation error
- */
+
 export const isValidationError = (error: unknown): boolean => {
   if (error instanceof Error && "response" in error) {
     const axiosError = error as AxiosError;

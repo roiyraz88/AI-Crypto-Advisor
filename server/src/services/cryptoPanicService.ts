@@ -42,7 +42,9 @@ export const fetchLatestNews = async (
 
     const url = `https://cryptopanic.com/api/developer/v2/posts/`;
 
-    const response = await fetch(`${url}?auth_token=${apiKey}&filter=news&public=true`);
+    const response = await fetch(
+      `${url}?auth_token=${apiKey}&filter=news&public=true`
+    );
 
     if (!response.ok) throw new Error("Failed to fetch data from CryptoPanic");
 
@@ -51,7 +53,9 @@ export const fetchLatestNews = async (
     const news = data.results ?? [];
 
     // Normalize filter symbols to lower-case if provided
-    const rawSymbols = (filterSymbols || []).map((s) => String(s).toLowerCase()).filter(Boolean);
+    const rawSymbols = (filterSymbols || [])
+      .map((s) => String(s).toLowerCase())
+      .filter(Boolean);
 
     // map some common coin ids to their ticker symbols for better matching
     const idToSymbol: Record<string, string> = {
@@ -114,14 +118,24 @@ export const fetchLatestNews = async (
         // Return only articles that matched (score > 0), sorted by score then date. If none matched, fall back to top news
         const matched = scored
           .filter((s) => s.score > 0)
-          .sort((x, y) => (y.score - x.score) || (new Date(y.a.publishedAt).getTime() - new Date(x.a.publishedAt).getTime()))
+          .sort(
+            (x, y) =>
+              y.score - x.score ||
+              new Date(y.a.publishedAt).getTime() -
+                new Date(x.a.publishedAt).getTime()
+          )
           .map((s) => s.a);
         if (matched.length > 0) return matched.slice(0, limit);
         // no matches — fall through to return general news below
       }
 
       const prioritized = scored
-        .sort((x, y) => (y.score - x.score) || (new Date(y.a.publishedAt).getTime() - new Date(x.a.publishedAt).getTime()))
+        .sort(
+          (x, y) =>
+            y.score - x.score ||
+            new Date(y.a.publishedAt).getTime() -
+              new Date(x.a.publishedAt).getTime()
+        )
         .map((s) => s.a);
 
       // If no prioritized matches (all scores 0), fallback to normal order

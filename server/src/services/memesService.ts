@@ -13,10 +13,7 @@ interface OpenRouterResponse {
   choices: OpenRouterChoice[];
 }
 
-/**
- * Fetch trending cryptocurrency memes using AI
- * Generates creative, funny crypto-related meme concepts
- */
+
 export const fetchTrendingMemes = async (
   limit: number = 5
 ): Promise<MemeData[]> => {

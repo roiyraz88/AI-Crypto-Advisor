@@ -14,9 +14,7 @@ export interface CryptoData {
   marketCap: number;
 }
 
-/**
- * Response type for /coins/markets
- */
+
 interface CoinGeckoMarketCoin {
   id: string;
   name: string;
@@ -26,9 +24,7 @@ interface CoinGeckoMarketCoin {
   price_change_percentage_24h: number;
 }
 
-/**
- * Response type for /coins/{id}
- */
+
 interface CoinGeckoSingleCoinResponse {
   id: string;
   name: string;
@@ -40,12 +36,9 @@ interface CoinGeckoSingleCoinResponse {
   };
 }
 
-/** Cache for 5 minutes */
 const cache = new NodeCache({ stdTTL: 300 });
 
-/**
- * Fetch top cryptocurrencies from CoinGecko
- */
+
 export const fetchTopCryptos = async (
   limit: number = 10,
   favorites?: string[] | null,
@@ -79,7 +72,6 @@ export const fetchTopCryptos = async (
       change24h: coin.price_change_percentage_24h,
       marketCap: coin.market_cap,
     }));
-    // If onlyFavorites requested and favorites provided, fetch each favorite by id
     if (onlyFavorites && favorites && favorites.length > 0) {
       const favItems: CryptoData[] = [];
       for (const f of favorites) {
@@ -87,16 +79,13 @@ export const fetchTopCryptos = async (
           const coin = await fetchCryptoById(String(f).toLowerCase());
           if (coin) favItems.push(coin);
         } catch (e) {
-          // ignore individual failures
         }
       }
 
-      // return only the favorites found (respect order)
       cache.set(cacheKey, favItems);
       return favItems;
     }
 
-    // If favorites provided, reorder to put favorites first (in the order provided)
     let ordered = result;
     if (favorites && favorites.length > 0) {
       const favsUpper = favorites.map((f) => String(f).toUpperCase());
@@ -104,7 +93,6 @@ export const fetchTopCryptos = async (
       const rest: CryptoData[] = [];
       const seen = new Set<string>();
 
-      // push favorites in the order specified
       for (const f of favsUpper) {
         const match = result.find(
           (r) => r.symbol === f || r.id.toUpperCase() === f
@@ -115,13 +103,10 @@ export const fetchTopCryptos = async (
         }
       }
 
-      // then append remaining coins
       for (const r of result) {
         if (!seen.has(r.symbol)) rest.push(r);
       }
 
-      // If some favorites weren't present in the top results, try fetching them directly by id
-      // favorites are passed as strings that are most commonly coin ids (e.g. 'bitcoin').
       const missingFavs = favsUpper.filter((f) => ![...seen].includes(f));
       for (const mf of missingFavs) {
         try {
@@ -145,9 +130,7 @@ export const fetchTopCryptos = async (
   }
 };
 
-/**
- * Fetch specific cryptocurrency data by ID
- */
+
 export const fetchCryptoById = async (
   id: string
 ): Promise<CryptoData | null> => {
@@ -181,9 +164,7 @@ export const fetchCryptoById = async (
   }
 };
 
-/**
- * Local Fallback (if API fails)
- */
+
 const loadFallbackTopCryptos = (): CryptoData[] => {
   return [
     {

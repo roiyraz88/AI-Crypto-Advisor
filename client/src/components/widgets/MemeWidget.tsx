@@ -18,14 +18,12 @@ const MemeWidget = ({ memes, isLoading, onVote }: MemeWidgetProps) => {
   const handleVote = async (contentId: string, vote: "up" | "down") => {
     if (votedItems.has(contentId)) return;
 
-    // optimistic update
     setVotedItems((prev) => new Set(prev).add(contentId));
     try {
       await dashboardApi.vote({ contentId, vote });
       onVote?.(contentId, vote);
     } catch (error) {
       console.error("Failed to vote:", error);
-      // revert on failure
       setVotedItems((prev) => {
         const copy = new Set(prev);
         copy.delete(contentId);
@@ -97,7 +95,7 @@ const MemeWidget = ({ memes, isLoading, onVote }: MemeWidgetProps) => {
               </p>
             </div>
           </div>
-          
+
           {/* Decorative corner accent */}
           <div className="absolute -top-2 -right-2 w-16 h-16 bg-gradient-to-br from-yellow-400/20 to-orange-400/20 rounded-full blur-xl" />
         </div>

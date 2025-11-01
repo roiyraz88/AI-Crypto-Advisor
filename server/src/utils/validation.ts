@@ -1,10 +1,6 @@
 import { z } from "zod";
 
-/**
- * Validation schemas using Zod
- */
 
-// Auth schemas
 export const registerSchema = z.object({
   body: z.object({
     email: z.string().email("Invalid email address"),

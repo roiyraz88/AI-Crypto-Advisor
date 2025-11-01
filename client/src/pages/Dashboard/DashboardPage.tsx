@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from "react";
-import /* useNavigate */ "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -21,7 +20,6 @@ const DashboardPage = () => {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // No onboarding gating on dashboard — users complete onboarding at signup flow
 
   const fetchDashboard = useCallback(async () => {
     try {
@@ -44,26 +42,25 @@ const DashboardPage = () => {
 
   const preferences = usePreferencesStore((s) => s.preferences);
 
-  // Determine which content types to show. If preferences are not set,
-  // default to showing all sections. `contentTypes` is an array of strings
-  // the user selected in onboarding (e.g. ['Fun', 'Market News']).
+
   const contentTypes = preferences?.contentTypes ?? null;
-  const showMarketNews = contentTypes ? contentTypes.includes("Market News") : true;
+  const showMarketNews = contentTypes
+    ? contentTypes.includes("Market News")
+    : true;
   const showCharts = contentTypes ? contentTypes.includes("Charts") : true;
   const showSocial = contentTypes ? contentTypes.includes("Social") : true;
   const showFun = contentTypes ? contentTypes.includes("Fun") : true;
 
   useEffect(() => {
-    // Fetch dashboard on mount and whenever preferences change so the UI reflects
-    // updated onboarding choices immediately after the user saves their preferences.
     fetchDashboard();
   }, [fetchDashboard, preferences]);
 
-  // Also apply a local reorder of the already-fetched cryptos for instant feedback
   useEffect(() => {
     if (!preferences || !dashboardData) return;
 
-    const favs = (preferences.favoriteCryptos || []).map((f) => String(f).toUpperCase());
+    const favs = (preferences.favoriteCryptos || []).map((f) =>
+      String(f).toUpperCase()
+    );
     if (favs.length === 0) return;
 
     const cryptos = dashboardData.marketOverview.cryptos;
@@ -72,7 +69,9 @@ const DashboardPage = () => {
     const seen = new Set<string>();
 
     for (const f of favs) {
-      const match = cryptos.find((c) => c.symbol === f || c.id.toUpperCase() === f);
+      const match = cryptos.find(
+        (c) => c.symbol === f || c.id.toUpperCase() === f
+      );
       if (match && !seen.has(match.symbol)) {
         favItems.push(match);
         seen.add(match.symbol);
@@ -82,8 +81,6 @@ const DashboardPage = () => {
       if (!seen.has(c.symbol)) rest.push(c);
     }
 
-    // only update state when the reordered list actually differs to avoid
-    // triggering an infinite render loop (setState -> effect -> setState ...)
     const newOrder = [...favItems, ...rest];
     const current = dashboardData.marketOverview.cryptos;
     const isSame =
@@ -92,7 +89,12 @@ const DashboardPage = () => {
 
     if (!isSame) {
       setDashboardData((prev) =>
-        prev ? { ...prev, marketOverview: { ...prev.marketOverview, cryptos: newOrder } } : prev
+        prev
+          ? {
+              ...prev,
+              marketOverview: { ...prev.marketOverview, cryptos: newOrder },
+            }
+          : prev
       );
     }
   }, [preferences, dashboardData]);
@@ -133,7 +135,6 @@ const DashboardPage = () => {
     );
   }
 
-  // Show everything on dashboard; onboarding is part of signup flow
 
   return (
     <div className="flex flex-col gap-6">
@@ -150,11 +151,8 @@ const DashboardPage = () => {
           </Button>
         </div>
       </div>
-      {/* No onboarding banner — onboarding happens during signup */}
 
-      {/* Grid Layout for Widgets */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Conditionally render widgets according to user content preferences */}
         {showMarketNews && (
           <MarketNewsWidget
             articles={dashboardData.news.articles}

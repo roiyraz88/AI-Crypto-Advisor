@@ -61,8 +61,14 @@ const MarketNewsWidget = ({
             ? {
                 ...it,
                 sentiment: {
-                  positive: Math.max(0, it.sentiment.positive - (vote === "up" ? 1 : 0)),
-                  negative: Math.max(0, it.sentiment.negative - (vote === "down" ? 1 : 0)),
+                  positive: Math.max(
+                    0,
+                    it.sentiment.positive - (vote === "up" ? 1 : 0)
+                  ),
+                  negative: Math.max(
+                    0,
+                    it.sentiment.negative - (vote === "down" ? 1 : 0)
+                  ),
                 },
               }
             : it
@@ -98,7 +104,8 @@ const MarketNewsWidget = ({
               No news available at the moment.
             </p>
             <p className="text-sm text-muted-foreground mt-2 text-center">
-              Please check back later or ensure the CryptoPanic API key is configured.
+              Please check back later or ensure the CryptoPanic API key is
+              configured.
             </p>
           </div>
         </CardContent>
@@ -112,7 +119,7 @@ const MarketNewsWidget = ({
         <CardTitle className="text-xl font-semibold">Market News</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-  {items.slice(0, 5).map((article) => (
+        {items.slice(0, 5).map((article) => (
           <div
             key={article.id}
             className="border-b border-border pb-4 last:border-0 last:pb-0"
@@ -144,7 +151,11 @@ const MarketNewsWidget = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`h-8 w-8 ${votedItems.has(article.id.toString()) ? "text-green-700 bg-green-50" : "text-green-600 hover:text-green-700"}`}
+                    className={`h-8 w-8 ${
+                      votedItems.has(article.id.toString())
+                        ? "text-green-700 bg-green-50"
+                        : "text-green-600 hover:text-green-700"
+                    }`}
                     onClick={() => handleVote(article.id.toString(), "up")}
                     disabled={votedItems.has(article.id.toString())}
                   >
@@ -153,7 +164,11 @@ const MarketNewsWidget = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`h-8 w-8 ${votedItems.has(article.id.toString()) ? "text-red-700 bg-red-50" : "text-red-600 hover:text-red-700"}`}
+                    className={`h-8 w-8 ${
+                      votedItems.has(article.id.toString())
+                        ? "text-red-700 bg-red-50"
+                        : "text-red-600 hover:text-red-700"
+                    }`}
                     onClick={() => handleVote(article.id.toString(), "down")}
                     disabled={votedItems.has(article.id.toString())}
                   >

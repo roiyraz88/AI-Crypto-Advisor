@@ -14,16 +14,14 @@ const getCookieOptions = (maxAge: number) => {
 
   return {
     httpOnly: true,
-    secure: isProd || forceSecure,         // בפרודקשן חייב Secure כשSameSite=None
+    secure: isProd || forceSecure,         
     sameSite: (isProd ? "none" : "lax") as "none" | "lax" | "strict",
     maxAge,
     path: "/",
-    // אל תקבע domain בלוקאל — זה שובר שליחה של קוקיז
     domain: isProd ? process.env.COOKIE_DOMAIN : undefined,
   };
 };
 
-/** REGISTER */
 export const register = async (
   req: { body: { email: string; password: string; name: string } },
   res: Response
@@ -66,7 +64,6 @@ export const register = async (
   }
 };
 
-/** LOGIN */
 export const login = async (
   req: { body: { email: string; password: string } },
   res: Response
@@ -99,7 +96,6 @@ export const login = async (
   }
 };
 
-/** REFRESH */
 export const refresh = async (
   req: { cookies: { refreshToken?: string } },
   res: Response
@@ -115,7 +111,6 @@ export const refresh = async (
     const user = await User.findOne({ refreshToken: hashed });
 
     if (!user) {
-      // נקה קוקיז אם לא תקין
       res.clearCookie("token", getCookieOptions(0));
       res.clearCookie("refreshToken", getCookieOptions(0));
       res.status(401).json({ success: false, error: { message: "Invalid refresh token" } });
@@ -145,7 +140,6 @@ export const refresh = async (
   }
 };
 
-/** LOGOUT */
 export const logout = async (
   req: { cookies: { refreshToken?: string } },
   res: Response

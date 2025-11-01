@@ -38,15 +38,29 @@ export const getDashboard = async (
         ? preferences.favoriteCryptos.map((s) => s.toUpperCase())
         : defaultFavorites;
 
-    // Fetch all dashboard sections in parallel.
-    // If the user supplied favorites, request only those cryptos and only matching news.
+
     const [marketData, newsData, memesData] = await Promise.all([
-      fetchTopCryptos(10, favoritesToUse, Boolean(preferences && preferences.favoriteCryptos && preferences.favoriteCryptos.length > 0)),
-      fetchLatestNews(10, preferences?.favoriteCryptos, Boolean(preferences && preferences.favoriteCryptos && preferences.favoriteCryptos.length > 0)),
+      fetchTopCryptos(
+        10,
+        favoritesToUse,
+        Boolean(
+          preferences &&
+            preferences.favoriteCryptos &&
+            preferences.favoriteCryptos.length > 0
+        )
+      ),
+      fetchLatestNews(
+        10,
+        preferences?.favoriteCryptos,
+        Boolean(
+          preferences &&
+            preferences.favoriteCryptos &&
+            preferences.favoriteCryptos.length > 0
+        )
+      ),
       fetchTrendingMemes(5),
     ]);
 
-    // Get AI analysis if preferences exist (use personalization). If no preferences, keep generic message.
     let aiAnalysis = "";
     if (preferences) {
       try {

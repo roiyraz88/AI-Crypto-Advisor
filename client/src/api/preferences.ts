@@ -5,13 +5,9 @@ import type {
   PreferencesRequest,
 } from "../types";
 
-/**
- * Preferences API endpoints
- */
+
 export const preferencesApi = {
-  /**
-   * Get user preferences
-   */
+ 
   getPreferences: async (): Promise<ApiResponse<{ preferences: Preferences }>> => {
     const response = await axiosInstance.get<
       ApiResponse<{ preferences: Preferences }>
@@ -19,9 +15,7 @@ export const preferencesApi = {
     return response.data;
   },
 
-  /**
-   * Save or update user preferences
-   */
+
   savePreferences: async (
     data: PreferencesRequest
   ): Promise<ApiResponse<{ preferences: Preferences }>> => {

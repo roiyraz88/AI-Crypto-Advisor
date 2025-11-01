@@ -1,7 +1,6 @@
 import axios, { AxiosError } from "axios";
 import type { InternalAxiosRequestConfig } from "axios";
 
-// הגנה מלופים
 let isRefreshing = false;
 let failedQueue: Array<{ resolve: (v?: unknown) => void; reject: (e: unknown) => void }> = [];
 
@@ -12,7 +11,7 @@ const processQueue = (error: AxiosError | null) => {
 
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000",
-  withCredentials: true, // חובה כדי לשלוח קוקיז HTTP-Only
+  withCredentials: true, 
   headers: { "Content-Type": "application/json" },
 });
 
@@ -28,7 +27,6 @@ axiosInstance.interceptors.response.use(
 
     if (error.response?.status === 401 && original && !original._retry) {
       if (original.url?.includes("/auth/refresh")) {
-        // ריענון נכשל — תן לקוד הקורא לטפל
         return Promise.reject(error);
       }
 

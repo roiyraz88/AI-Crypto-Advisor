@@ -2,9 +2,7 @@ import { Response } from "express";
 import { AuthRequest } from "../middleware/requireAuth";
 import { Vote } from "../models/Vote";
 
-/**
- * Save or update a vote (thumbs up/down)
- */
+
 export const saveVote = async (
   req: AuthRequest,
   res: Response
@@ -20,18 +18,15 @@ export const saveVote = async (
 
     const { contentId, vote } = req.body;
 
-    // Find existing vote
     let existingVote = await Vote.findOne({
       userId: req.user.id,
       contentId,
     });
 
     if (existingVote) {
-      // Update existing vote
       existingVote.vote = vote;
       await existingVote.save();
     } else {
-      // Create new vote
       existingVote = new Vote({
         userId: req.user.id,
         contentId,

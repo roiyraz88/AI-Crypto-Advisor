@@ -1,6 +1,4 @@
-/**
- * App constants
- */
+
 
 export const CRYPTO_OPTIONS = [
   { value: "bitcoin", label: "Bitcoin (BTC)" },

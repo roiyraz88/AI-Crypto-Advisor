@@ -1,15 +1,11 @@
-/**
- * User types
- */
+
 export interface User {
   id: string;
   email: string;
   name: string;
 }
 
-/**
- * Auth types
- */
+
 export interface LoginRequest {
   email: string;
   password: string;
@@ -28,9 +24,7 @@ export interface AuthResponse {
   };
 }
 
-/**
- * Preferences types
- */
+
 export type ExperienceLevel = "beginner" | "intermediate" | "advanced";
 export type RiskTolerance = "low" | "moderate" | "high";
 export type InvestorType =
@@ -60,9 +54,7 @@ export interface PreferencesRequest {
   contentTypes?: ContentType[];
 }
 
-/**
- * Dashboard types
- */
+
 export interface CryptoData {
   id: string;
   name: string;
@@ -110,9 +102,7 @@ export interface DashboardData {
   };
 }
 
-/**
- * Vote types
- */
+
 export interface VoteRequest {
   contentId: string;
   vote: "up" | "down";
@@ -128,9 +118,7 @@ export interface VoteResponse {
   };
 }
 
-/**
- * API Response wrapper
- */
+
 export interface ApiResponse<T> {
   success: boolean;
   data?: T;

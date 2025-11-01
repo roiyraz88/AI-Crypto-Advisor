@@ -1,10 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { z, ZodSchema } from "zod";
 
-/**
- * Validation middleware factory
- * Validates request body against Zod schema
- */
+
 export const validate =
   (schema: ZodSchema) =>
   (req: Request, res: Response, next: NextFunction): void => {

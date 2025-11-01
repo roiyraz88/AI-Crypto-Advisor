@@ -1,9 +1,7 @@
 import { Response } from "express";
 import { AuthRequest } from "../middleware/requireAuth";
 
-/**
- * Get current user info
- */
+
 export const getMe = (req: AuthRequest, res: Response): void => {
   if (!req.user) {
     res.status(401).json({

@@ -63,7 +63,6 @@ const ProfilePage = () => {
     loadPreferences();
   }, [fetchPreferences]);
 
-  // Populate form when preferences are loaded
   useEffect(() => {
     if (preferences) {
       setSelectedCryptos(preferences.favoriteCryptos || []);
@@ -141,7 +140,6 @@ const ProfilePage = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* User Information Card */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -173,7 +171,6 @@ const ProfilePage = () => {
           </CardContent>
         </Card>
 
-        {/* Preferences Card */}
         <Card>
           <CardHeader>
             <CardTitle>Investment Preferences</CardTitle>
@@ -196,7 +193,6 @@ const ProfilePage = () => {
               </Alert>
             )}
 
-            {/* Cryptocurrencies */}
             <div>
               <h3 className="text-sm font-semibold mb-3">
                 Favorite Cryptocurrencies
@@ -230,7 +226,6 @@ const ProfilePage = () => {
 
             <Separator />
 
-            {/* Investor Type */}
             <div>
               <h3 className="text-sm font-semibold mb-3">Investor Type</h3>
               <Select
@@ -252,7 +247,6 @@ const ProfilePage = () => {
 
             <Separator />
 
-            {/* Experience Level */}
             <div>
               <h3 className="text-sm font-semibold mb-3">
                 Experience Level
@@ -298,7 +292,6 @@ const ProfilePage = () => {
 
             <Separator />
 
-            {/* Content Types */}
             <div>
               <h3 className="text-sm font-semibold mb-3">Content Preferences</h3>
               <div className="flex flex-col gap-3">

@@ -47,20 +47,16 @@ const OnboardingPage = () => {
     usePreferencesStore();
   const navigate = useNavigate();
 
-  // Redirect to dashboard if user has already completed onboarding
   useEffect(() => {
     const checkOnboardingStatus = async () => {
-      // Try to fetch preferences if not already loaded
       if (!hasCompletedOnboarding()) {
         try {
           await fetchPreferences();
         } catch (error) {
-          // Preferences not found is OK - user needs onboarding
           console.log("Preferences not found, showing onboarding");
         }
       }
 
-      // If preferences exist after fetch, redirect to dashboard
       if (hasCompletedOnboarding()) {
         navigate("/dashboard", { replace: true });
       }
@@ -142,7 +138,6 @@ const OnboardingPage = () => {
           <Progress value={progress} className="w-full mt-2" />
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Step 1: Crypto Assets & Investor Type */}
           {currentStep === 1 && (
             <div className="flex flex-col gap-6">
               <div>
@@ -201,7 +196,6 @@ const OnboardingPage = () => {
             </div>
           )}
 
-          {/* Step 2: Experience & Risk */}
           {currentStep === 2 && (
             <div className="flex flex-col gap-6">
               <div>
@@ -287,7 +281,6 @@ const OnboardingPage = () => {
             </div>
           )}
 
-          {/* Step 3: Review & Submit */}
           {currentStep === 3 && (
             <div className="flex flex-col gap-4">
               <h2 className="text-xl font-semibold">Review your preferences</h2>
@@ -335,7 +328,6 @@ const OnboardingPage = () => {
             </div>
           )}
 
-          {/* Navigation Buttons */}
           <div className="flex justify-between gap-4 mt-6">
             <Button
               variant="outline"

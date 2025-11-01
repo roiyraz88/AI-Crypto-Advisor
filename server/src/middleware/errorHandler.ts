@@ -1,9 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 
-/**
- * Error handler middleware
- * Handles all errors thrown in routes
- */
+
 export const errorHandler = (
   err: Error,
   _req: Request,
@@ -12,11 +9,9 @@ export const errorHandler = (
 ): void => {
   console.error("Error:", err);
 
-  // Default error response
   let statusCode = 500;
   const message = err.message || "Internal server error";
 
-  // Handle specific error types
   if (err.message.includes("not found")) {
     statusCode = 404;
   } else if (

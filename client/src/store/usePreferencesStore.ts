@@ -27,18 +27,15 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
       if (res.success && res.data) {
         set({ preferences: res.data.preferences, isLoading: false });
       } else {
-        // If API returned not-success, treat as no preferences
         set({ preferences: null, isLoading: false });
       }
     } catch (error) {
-      // If 404 (preferences not found) set null without throwing
-      // preferencesApi uses axios under the hood; check error response
+    
       set({
         error: getErrorMessage(error),
         isLoading: false,
         preferences: null,
       });
-      // Do not rethrow - callers expect to handle absent preferences gracefully
     }
   },
 
@@ -61,8 +58,6 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   hasCompletedOnboarding: () => {
     const p = get().preferences;
     if (!p) return false;
-    // Consider onboarding complete if experienceLevel and riskTolerance are set
-    // and user selected at least one favorite crypto
     const hasExperience = Boolean(p.experienceLevel);
     const hasRisk = Boolean(p.riskTolerance);
     const hasFavorites =
