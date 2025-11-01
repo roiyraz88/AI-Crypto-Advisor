@@ -2,7 +2,10 @@ import axios, { AxiosError } from "axios";
 import type { InternalAxiosRequestConfig } from "axios";
 
 let isRefreshing = false;
-let failedQueue: Array<{ resolve: (v?: unknown) => void; reject: (e: unknown) => void }> = [];
+let failedQueue: Array<{
+  resolve: (v?: unknown) => void;
+  reject: (e: unknown) => void;
+}> = [];
 
 const processQueue = (error: AxiosError | null) => {
   failedQueue.forEach((p) => (error ? p.reject(error) : p.resolve()));
@@ -10,8 +13,12 @@ const processQueue = (error: AxiosError | null) => {
 };
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000",
-  withCredentials: true, 
+  // Use VITE_API_URL when provided; otherwise default to the deployed backend URL so
+  // the client works without requiring env vars during quick deploys/testing.
+  baseURL:
+    import.meta.env.VITE_API_URL ||
+    "https://ai-crypto-advisor-rr7r.onrender.com",
+  withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -23,7 +30,9 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (res) => res,
   async (error: AxiosError) => {
-    const original = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
+    const original = error.config as
+      | (InternalAxiosRequestConfig & { _retry?: boolean })
+      | undefined;
 
     if (error.response?.status === 401 && original && !original._retry) {
       if (original.url?.includes("/auth/refresh")) {
@@ -32,7 +41,10 @@ axiosInstance.interceptors.response.use(
 
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve: () => resolve(axiosInstance(original)), reject });
+          failedQueue.push({
+            resolve: () => resolve(axiosInstance(original)),
+            reject,
+          });
         });
       }
 
