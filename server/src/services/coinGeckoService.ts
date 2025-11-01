@@ -46,8 +46,15 @@ const cache = new NodeCache({ stdTTL: 300 });
 /**
  * Fetch top cryptocurrencies from CoinGecko
  */
-export const fetchTopCryptos = async (limit: number = 10): Promise<CryptoData[]> => {
-  const cacheKey = `top_${limit}`;
+export const fetchTopCryptos = async (
+  limit: number = 10,
+  favorites?: string[] | null,
+  onlyFavorites: boolean = false
+): Promise<CryptoData[]> => {
+  const favKey = (favorites || [])
+    .map((f) => String(f).toUpperCase())
+    .join(",");
+  const cacheKey = `top_${limit}_${favKey}`;
   const cached = cache.get<CryptoData[]>(cacheKey);
 
   if (cached) return cached;
@@ -72,9 +79,66 @@ export const fetchTopCryptos = async (limit: number = 10): Promise<CryptoData[]>
       change24h: coin.price_change_percentage_24h,
       marketCap: coin.market_cap,
     }));
+    // If onlyFavorites requested and favorites provided, fetch each favorite by id
+    if (onlyFavorites && favorites && favorites.length > 0) {
+      const favItems: CryptoData[] = [];
+      for (const f of favorites) {
+        try {
+          const coin = await fetchCryptoById(String(f).toLowerCase());
+          if (coin) favItems.push(coin);
+        } catch (e) {
+          // ignore individual failures
+        }
+      }
 
-    cache.set(cacheKey, result);
-    return result;
+      // return only the favorites found (respect order)
+      cache.set(cacheKey, favItems);
+      return favItems;
+    }
+
+    // If favorites provided, reorder to put favorites first (in the order provided)
+    let ordered = result;
+    if (favorites && favorites.length > 0) {
+      const favsUpper = favorites.map((f) => String(f).toUpperCase());
+      const favItems: CryptoData[] = [];
+      const rest: CryptoData[] = [];
+      const seen = new Set<string>();
+
+      // push favorites in the order specified
+      for (const f of favsUpper) {
+        const match = result.find(
+          (r) => r.symbol === f || r.id.toUpperCase() === f
+        );
+        if (match && !seen.has(match.symbol)) {
+          favItems.push(match);
+          seen.add(match.symbol);
+        }
+      }
+
+      // then append remaining coins
+      for (const r of result) {
+        if (!seen.has(r.symbol)) rest.push(r);
+      }
+
+      // If some favorites weren't present in the top results, try fetching them directly by id
+      // favorites are passed as strings that are most commonly coin ids (e.g. 'bitcoin').
+      const missingFavs = favsUpper.filter((f) => ![...seen].includes(f));
+      for (const mf of missingFavs) {
+        try {
+          const id = mf.toLowerCase();
+          const extra = await fetchCryptoById(id);
+          if (extra && !seen.has(extra.symbol)) {
+            favItems.push(extra);
+            seen.add(extra.symbol);
+          }
+        } catch {}
+      }
+
+      ordered = [...favItems, ...rest];
+    }
+
+    cache.set(cacheKey, ordered);
+    return ordered;
   } catch (error) {
     console.error("CoinGecko API error:", error);
     return loadFallbackTopCryptos();
@@ -84,7 +148,9 @@ export const fetchTopCryptos = async (limit: number = 10): Promise<CryptoData[]>
 /**
  * Fetch specific cryptocurrency data by ID
  */
-export const fetchCryptoById = async (id: string): Promise<CryptoData | null> => {
+export const fetchCryptoById = async (
+  id: string
+): Promise<CryptoData | null> => {
   const cacheKey = `coin_${id}`;
   const cached = cache.get<CryptoData>(cacheKey);
   if (cached) return cached;
@@ -120,8 +186,29 @@ export const fetchCryptoById = async (id: string): Promise<CryptoData | null> =>
  */
 const loadFallbackTopCryptos = (): CryptoData[] => {
   return [
-    { id: "bitcoin", name: "Bitcoin", symbol: "BTC", price: 67000, change24h: 1.2, marketCap: 880000000000 },
-    { id: "ethereum", name: "Ethereum", symbol: "ETH", price: 3500, change24h: -0.4, marketCap: 420000000000 },
-    { id: "solana", name: "Solana", symbol: "SOL", price: 155, change24h: 2.1, marketCap: 70000000000 },
+    {
+      id: "bitcoin",
+      name: "Bitcoin",
+      symbol: "BTC",
+      price: 67000,
+      change24h: 1.2,
+      marketCap: 880000000000,
+    },
+    {
+      id: "ethereum",
+      name: "Ethereum",
+      symbol: "ETH",
+      price: 3500,
+      change24h: -0.4,
+      marketCap: 420000000000,
+    },
+    {
+      id: "solana",
+      name: "Solana",
+      symbol: "SOL",
+      price: 155,
+      change24h: 2.1,
+      marketCap: 70000000000,
+    },
   ];
 };

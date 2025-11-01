@@ -21,12 +21,15 @@ const AIInsightWidget = ({
   const handleVote = async (vote: "up" | "down") => {
     if (hasVoted) return;
 
+    // optimistic update
+    setHasVoted(true);
     try {
       await dashboardApi.vote({ contentId: "ai-insight", vote });
-      setHasVoted(true);
       onVote?.("ai-insight", vote);
     } catch (error) {
       console.error("Failed to vote:", error);
+      // revert on failure
+      setHasVoted(false);
     }
   };
 
@@ -71,7 +74,7 @@ const AIInsightWidget = ({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-green-600 hover:text-green-700"
+              className={`h-8 w-8 ${hasVoted ? "text-green-700 bg-green-50" : "text-green-600 hover:text-green-700"}`}
               onClick={() => handleVote("up")}
               disabled={hasVoted}
             >
@@ -80,7 +83,7 @@ const AIInsightWidget = ({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-red-600 hover:text-red-700"
+              className={`h-8 w-8 ${hasVoted ? "text-red-700 bg-red-50" : "text-red-600 hover:text-red-700"}`}
               onClick={() => handleVote("down")}
               disabled={hasVoted}
             >

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -18,16 +18,56 @@ const MarketNewsWidget = ({
   onVote,
 }: MarketNewsWidgetProps) => {
   const [votedItems, setVotedItems] = useState<Set<string>>(new Set());
+  const [items, setItems] = useState<NewsData[]>(articles || []);
+
+  // keep local items in sync with incoming props
+  useEffect(() => {
+    setItems(articles || []);
+  }, [articles]);
 
   const handleVote = async (contentId: string, vote: "up" | "down") => {
     if (votedItems.has(contentId)) return;
 
+    // optimistic update
+    setVotedItems((prev) => new Set(prev).add(contentId));
+    setItems((prev) =>
+      prev.map((it) =>
+        String(it.id) === String(contentId)
+          ? {
+              ...it,
+              sentiment: {
+                positive: it.sentiment.positive + (vote === "up" ? 1 : 0),
+                negative: it.sentiment.negative + (vote === "down" ? 1 : 0),
+              },
+            }
+          : it
+      )
+    );
+
     try {
       await dashboardApi.vote({ contentId: contentId.toString(), vote });
-      setVotedItems((prev) => new Set(prev).add(contentId));
       onVote?.(contentId, vote);
     } catch (error) {
       console.error("Failed to vote:", error);
+      // revert optimistic update on failure
+      setVotedItems((prev) => {
+        const copy = new Set(prev);
+        copy.delete(contentId);
+        return copy;
+      });
+      setItems((prev) =>
+        prev.map((it) =>
+          String(it.id) === String(contentId)
+            ? {
+                ...it,
+                sentiment: {
+                  positive: Math.max(0, it.sentiment.positive - (vote === "up" ? 1 : 0)),
+                  negative: Math.max(0, it.sentiment.negative - (vote === "down" ? 1 : 0)),
+                },
+              }
+            : it
+        )
+      );
     }
   };
 
@@ -72,7 +112,7 @@ const MarketNewsWidget = ({
         <CardTitle className="text-xl font-semibold">Market News</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {articles.slice(0, 5).map((article) => (
+  {items.slice(0, 5).map((article) => (
           <div
             key={article.id}
             className="border-b border-border pb-4 last:border-0 last:pb-0"
@@ -104,7 +144,7 @@ const MarketNewsWidget = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-green-600 hover:text-green-700"
+                    className={`h-8 w-8 ${votedItems.has(article.id.toString()) ? "text-green-700 bg-green-50" : "text-green-600 hover:text-green-700"}`}
                     onClick={() => handleVote(article.id.toString(), "up")}
                     disabled={votedItems.has(article.id.toString())}
                   >
@@ -113,7 +153,7 @@ const MarketNewsWidget = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-red-600 hover:text-red-700"
+                    className={`h-8 w-8 ${votedItems.has(article.id.toString()) ? "text-red-700 bg-red-50" : "text-red-600 hover:text-red-700"}`}
                     onClick={() => handleVote(article.id.toString(), "down")}
                     disabled={votedItems.has(article.id.toString())}
                   >

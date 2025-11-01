@@ -27,14 +27,26 @@ export const getDashboard = async (
     // Get user preferences
     const preferences = await Preferences.findOne({ userId: req.user.id });
 
-    // Fetch all dashboard sections in parallel (always fetch, even without preferences)
+    // Default favorites if user has not set any
+    const defaultFavorites = ["BTC", "ETH", "SOL", "ADA", "XRP"];
+
+    // Decide which symbols to use for personalized sections
+    const favoritesToUse =
+      preferences &&
+      preferences.favoriteCryptos &&
+      preferences.favoriteCryptos.length > 0
+        ? preferences.favoriteCryptos.map((s) => s.toUpperCase())
+        : defaultFavorites;
+
+    // Fetch all dashboard sections in parallel.
+    // If the user supplied favorites, request only those cryptos and only matching news.
     const [marketData, newsData, memesData] = await Promise.all([
-      fetchTopCryptos(10),
-      fetchLatestNews(10),
+      fetchTopCryptos(10, favoritesToUse, Boolean(preferences && preferences.favoriteCryptos && preferences.favoriteCryptos.length > 0)),
+      fetchLatestNews(10, preferences?.favoriteCryptos, Boolean(preferences && preferences.favoriteCryptos && preferences.favoriteCryptos.length > 0)),
       fetchTrendingMemes(5),
     ]);
 
-    // Get AI analysis if preferences exist
+    // Get AI analysis if preferences exist (use personalization). If no preferences, keep generic message.
     let aiAnalysis = "";
     if (preferences) {
       try {
@@ -66,7 +78,9 @@ export const getDashboard = async (
         },
         aiAnalysis: {
           title: "AI Advisor",
-          content: aiAnalysis || "Complete onboarding to unlock personalized AI insights.",
+          content:
+            aiAnalysis ||
+            "Complete onboarding to unlock personalized AI insights.",
         },
         memes: {
           title: "Trending Memes",

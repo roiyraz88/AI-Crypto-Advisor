@@ -31,8 +31,11 @@ export interface NewsData {
     positive: number;
   };
 }
-
-export const fetchLatestNews = async (limit: number = 10): Promise<NewsData[]> => {
+export const fetchLatestNews = async (
+  limit: number = 10,
+  filterSymbols?: string[] | null,
+  filterOnly: boolean = false
+): Promise<NewsData[]> => {
   try {
     const apiKey = process.env.CRYPTOPANIC_API_KEY;
     if (!apiKey) throw new Error("CRYPTOPANIC_API_KEY is not configured");
@@ -47,7 +50,36 @@ export const fetchLatestNews = async (limit: number = 10): Promise<NewsData[]> =
 
     const news = data.results ?? [];
 
-    return news.slice(0, limit).map((item) => ({
+    // Normalize filter symbols to lower-case if provided
+    const rawSymbols = (filterSymbols || []).map((s) => String(s).toLowerCase()).filter(Boolean);
+
+    // map some common coin ids to their ticker symbols for better matching
+    const idToSymbol: Record<string, string> = {
+      bitcoin: "BTC",
+      ethereum: "ETH",
+      solana: "SOL",
+      cardano: "ADA",
+      polkadot: "DOT",
+      chainlink: "LINK",
+      polygon: "MATIC",
+      "avalanche-2": "AVAX",
+      uniswap: "UNI",
+      litecoin: "LTC",
+      tether: "USDT",
+      binancecoin: "BNB",
+    };
+
+    const symbols = rawSymbols
+      .flatMap((s) => {
+        const up = s.toUpperCase();
+        const alias = idToSymbol[s];
+        return alias ? [up, alias] : [up];
+      })
+      .map((s) => s.toUpperCase())
+      .filter(Boolean);
+
+    // Helper: map CryptoPanic item to NewsData
+    const mapItem = (item: CryptoPanicNewsItem): NewsData => ({
       id: item.id,
       title: item.title,
       url: item.url,
@@ -57,7 +89,47 @@ export const fetchLatestNews = async (limit: number = 10): Promise<NewsData[]> =
         negative: item.votes?.negative ?? 0,
         positive: item.votes?.positive ?? 0,
       },
-    }));
+    });
+
+    const mapped = news.map(mapItem);
+
+    // If symbols provided, prioritize or filter articles that mention those symbols in the title or url.
+    if (symbols.length > 0) {
+      const scoreArticle = (a: NewsData) => {
+        const text = (a.title + " " + a.url + " " + a.source).toUpperCase();
+        let score = 0;
+        for (const s of symbols) {
+          if (text.includes(s)) score += 2;
+          // also match common coin names (basic check)
+          if (s === "BTC" && text.includes("BITCOIN")) score += 2;
+          if (s === "ETH" && text.includes("ETHEREUM")) score += 2;
+          if (s === "SOL" && text.includes("SOLANA")) score += 2;
+        }
+        return score;
+      };
+
+      const scored = mapped.map((a) => ({ a, score: scoreArticle(a) }));
+
+      if (filterOnly) {
+        // Return only articles that matched (score > 0), sorted by score then date. If none matched, fall back to top news
+        const matched = scored
+          .filter((s) => s.score > 0)
+          .sort((x, y) => (y.score - x.score) || (new Date(y.a.publishedAt).getTime() - new Date(x.a.publishedAt).getTime()))
+          .map((s) => s.a);
+        if (matched.length > 0) return matched.slice(0, limit);
+        // no matches — fall through to return general news below
+      }
+
+      const prioritized = scored
+        .sort((x, y) => (y.score - x.score) || (new Date(y.a.publishedAt).getTime() - new Date(x.a.publishedAt).getTime()))
+        .map((s) => s.a);
+
+      // If no prioritized matches (all scores 0), fallback to normal order
+      const hasMatches = prioritized.some((p) => scoreArticle(p) > 0);
+      return (hasMatches ? prioritized : mapped).slice(0, limit);
+    }
+
+    return mapped.slice(0, limit);
   } catch (error) {
     console.error("CryptoPanic API error:", error);
     return loadFallbackNews(limit);

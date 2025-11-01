@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -19,16 +19,28 @@ const CoinPricesWidget = ({
   onVote,
 }: CoinPricesWidgetProps) => {
   const [votedItems, setVotedItems] = useState<Set<string>>(new Set());
+  const [items, setItems] = useState<CryptoData[]>(cryptos || []);
+
+  useEffect(() => {
+    setItems(cryptos || []);
+  }, [cryptos]);
 
   const handleVote = async (contentId: string, vote: "up" | "down") => {
     if (votedItems.has(contentId)) return;
 
+    // optimistic update: mark as voted immediately
+    setVotedItems((prev) => new Set(prev).add(contentId));
     try {
       await dashboardApi.vote({ contentId, vote });
-      setVotedItems((prev) => new Set(prev).add(contentId));
       onVote?.(contentId, vote);
     } catch (error) {
       console.error("Failed to vote:", error);
+      // revert optimistic update on failure
+      setVotedItems((prev) => {
+        const copy = new Set(prev);
+        copy.delete(contentId);
+        return copy;
+      });
     }
   };
 
@@ -103,7 +115,7 @@ const CoinPricesWidget = ({
         <CardTitle className="text-xl font-semibold">Coin Prices</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {cryptos.slice(0, 10).map((crypto) => (
+  {items.slice(0, 10).map((crypto) => (
           <div
             key={crypto.id}
             className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-accent transition-colors"
@@ -124,7 +136,7 @@ const CoinPricesWidget = ({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-green-600 hover:text-green-700"
+                className={`h-8 w-8 ${votedItems.has(`crypto-${crypto.id}`) ? "text-green-700 bg-green-50" : "text-green-600 hover:text-green-700"}`}
                 onClick={() => handleVote(`crypto-${crypto.id}`, "up")}
                 disabled={votedItems.has(`crypto-${crypto.id}`)}
               >
@@ -133,7 +145,7 @@ const CoinPricesWidget = ({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-red-600 hover:text-red-700"
+                className={`h-8 w-8 ${votedItems.has(`crypto-${crypto.id}`) ? "text-red-700 bg-red-50" : "text-red-600 hover:text-red-700"}`}
                 onClick={() => handleVote(`crypto-${crypto.id}`, "down")}
                 disabled={votedItems.has(`crypto-${crypto.id}`)}
               >

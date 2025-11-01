@@ -1,7 +1,21 @@
 // store/usePreferencesStore.ts
-import axiosInstance from "../api/axios";
+import { create } from "zustand";
+import { getErrorMessage } from "../utils/errorHandler";
+import type { Preferences, PreferencesRequest } from "../types";
+import { preferencesApi } from "../api/preferences";
 
-export const usePreferencesStore = create((set) => ({
+interface PreferencesState {
+  preferences: Preferences | null;
+  isLoading: boolean;
+  error: string | null;
+
+  fetchPreferences: () => Promise<void>;
+  savePreferences: (prefs: PreferencesRequest) => Promise<void>;
+  clearPreferences: () => void;
+  hasCompletedOnboarding: () => boolean;
+}
+
+export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   preferences: null,
   isLoading: false,
   error: null,
@@ -9,22 +23,50 @@ export const usePreferencesStore = create((set) => ({
   fetchPreferences: async () => {
     try {
       set({ isLoading: true, error: null });
-      const res = await axiosInstance.get("/preferences/me"); // ✅ שולח קוקיז
-      set({ preferences: res.data.data, isLoading: false });
+      const res = await preferencesApi.getPreferences();
+      if (res.success && res.data) {
+        set({ preferences: res.data.preferences, isLoading: false });
+      } else {
+        // If API returned not-success, treat as no preferences
+        set({ preferences: null, isLoading: false });
+      }
+    } catch (error) {
+      // If 404 (preferences not found) set null without throwing
+      // preferencesApi uses axios under the hood; check error response
+      set({
+        error: getErrorMessage(error),
+        isLoading: false,
+        preferences: null,
+      });
+      // Do not rethrow - callers expect to handle absent preferences gracefully
+    }
+  },
+
+  savePreferences: async (prefs: PreferencesRequest) => {
+    try {
+      set({ isLoading: true, error: null });
+      const res = await preferencesApi.savePreferences(prefs);
+      if (res.success && res.data) {
+        set({ preferences: res.data.preferences, isLoading: false });
+      } else {
+        set({ error: "Failed to save preferences", isLoading: false });
+      }
     } catch (error) {
       set({ error: getErrorMessage(error), isLoading: false });
       throw error;
     }
   },
-
-  savePreferences: async (prefs) => {
-    try {
-      set({ isLoading: true, error: null });
-      const res = await axiosInstance.post("/preferences", prefs); // ✅ שולח קוקיז
-      set({ preferences: res.data.data, isLoading: false });
-    } catch (error) {
-      set({ error: getErrorMessage(error), isLoading: false });
-      throw error;
-    }
+  clearPreferences: () =>
+    set({ preferences: null, isLoading: false, error: null }),
+  hasCompletedOnboarding: () => {
+    const p = get().preferences;
+    if (!p) return false;
+    // Consider onboarding complete if experienceLevel and riskTolerance are set
+    // and user selected at least one favorite crypto
+    const hasExperience = Boolean(p.experienceLevel);
+    const hasRisk = Boolean(p.riskTolerance);
+    const hasFavorites =
+      Array.isArray(p.favoriteCryptos) && p.favoriteCryptos.length > 0;
+    return hasExperience && hasRisk && hasFavorites;
   },
 }));

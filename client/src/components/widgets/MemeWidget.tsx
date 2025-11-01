@@ -18,12 +18,19 @@ const MemeWidget = ({ memes, isLoading, onVote }: MemeWidgetProps) => {
   const handleVote = async (contentId: string, vote: "up" | "down") => {
     if (votedItems.has(contentId)) return;
 
+    // optimistic update
+    setVotedItems((prev) => new Set(prev).add(contentId));
     try {
       await dashboardApi.vote({ contentId, vote });
-      setVotedItems((prev) => new Set(prev).add(contentId));
       onVote?.(contentId, vote);
     } catch (error) {
       console.error("Failed to vote:", error);
+      // revert on failure
+      setVotedItems((prev) => {
+        const copy = new Set(prev);
+        copy.delete(contentId);
+        return copy;
+      });
     }
   };
 

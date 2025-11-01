@@ -7,6 +7,7 @@ import LoginPage from "./pages/Auth/LoginPage";
 import SignupPage from "./pages/Auth/SignupPage";
 import OnboardingPage from "./pages/Onboarding/OnboardingPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
+import ProfilePage from "./pages/Profile/ProfilePage";
 
 function App() {
   const { fetchUser, isAuthenticated } = useAuthStore();
@@ -20,11 +21,23 @@ function App() {
       <Routes>
         <Route
           path="/login"
-          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />}
+          element={
+            isAuthenticated ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <LoginPage />
+            )
+          }
         />
         <Route
           path="/signup"
-          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignupPage />}
+          element={
+            isAuthenticated ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <SignupPage />
+            )
+          }
         />
 
         <Route
@@ -39,9 +52,20 @@ function App() {
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute requireOnboarding={true}>
+            <ProtectedRoute>
               <Layout>
                 <DashboardPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <ProfilePage />
               </Layout>
             </ProtectedRoute>
           }
