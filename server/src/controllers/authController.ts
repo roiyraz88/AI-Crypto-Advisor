@@ -12,18 +12,18 @@ const getCookieOptions = (maxAge: number) => {
   const isProd = process.env.NODE_ENV === "production";
   const forceSecure = process.env.FORCE_SECURE_COOKIES === "true";
 
+  const cookieDomain = process.env.COOKIE_DOMAIN || undefined;
+
   return {
     httpOnly: true,
     secure: isProd || forceSecure,
     sameSite: (isProd ? "none" : "lax") as "none" | "lax" | "strict",
     maxAge,
     path: "/",
-    // In production, default the cookie domain to the backend host if not
-    // explicitly provided via COOKIE_DOMAIN env var. This helps when deploying
-    // to hosts like Render where cookies should be scoped to the backend domain.
-    domain: isProd
-      ? process.env.COOKIE_DOMAIN || "ai-crypto-advisor-rr7r.onrender.com"
-      : undefined,
+    // Only set domain when explicitly provided via env var. Leaving domain
+    // undefined makes the cookie host-only which is usually the safest option
+    // and works correctly when the backend serves at its own domain on Render.
+    domain: cookieDomain,
   };
 };
 
@@ -36,12 +36,10 @@ export const register = async (
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      res
-        .status(400)
-        .json({
-          success: false,
-          error: { message: "User with this email already exists" },
-        });
+      res.status(400).json({
+        success: false,
+        error: { message: "User with this email already exists" },
+      });
       return;
     }
 
@@ -91,12 +89,10 @@ export const login = async (
     const user = await User.findOne({ email });
 
     if (!user || !(await comparePassword(password, user.password))) {
-      res
-        .status(401)
-        .json({
-          success: false,
-          error: { message: "Invalid email or password" },
-        });
+      res.status(401).json({
+        success: false,
+        error: { message: "Invalid email or password" },
+      });
       return;
     }
 
@@ -134,12 +130,10 @@ export const refresh = async (
   try {
     const { refreshToken } = req.cookies;
     if (!refreshToken) {
-      res
-        .status(401)
-        .json({
-          success: false,
-          error: { message: "Refresh token not provided" },
-        });
+      res.status(401).json({
+        success: false,
+        error: { message: "Refresh token not provided" },
+      });
       return;
     }
 
