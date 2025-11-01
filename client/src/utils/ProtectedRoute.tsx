@@ -1,20 +1,19 @@
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
-import { usePreferencesStore } from "../store/usePreferencesStore";
 import { Loader2 } from "lucide-react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requireOnboarding?: boolean;
 }
 
-export const ProtectedRoute = ({
-  children,
-  requireOnboarding = false,
-}: ProtectedRouteProps) => {
+/**
+ * ProtectedRoute component
+ * Waits for authentication check to complete before rendering
+ * Redirects to login if not authenticated
+ * NO onboarding requirement - dashboard handles locked state
+ */
+export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { isAuthenticated, isLoading } = useAuthStore();
-  const { hasCompletedOnboarding } = usePreferencesStore();
-  const location = useLocation();
 
   // Show loading until auth status is known
   if (isLoading) {
@@ -30,13 +29,6 @@ export const ProtectedRoute = ({
     return <Navigate to="/login" replace />;
   }
 
-  // Authenticated but onboarding required
-  if (requireOnboarding && !hasCompletedOnboarding()) {
-    // Avoid redirect loop if already on onboarding
-    if (location.pathname !== "/onboarding") {
-      return <Navigate to="/onboarding" replace />;
-    }
-  }
-
+  // Authenticated → render children
   return <>{children}</>;
 };

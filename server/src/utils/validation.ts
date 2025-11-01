@@ -27,6 +27,7 @@ export const preferencesSchema = z.object({
     riskTolerance: z.enum(["low", "moderate", "high"]),
     investmentGoals: z.array(z.string()).min(1, "At least one investment goal is required"),
     favoriteCryptos: z.array(z.string()).min(1, "At least one favorite crypto is required"),
+    contentTypes: z.array(z.string()).optional(),
   }),
 });
 

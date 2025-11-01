@@ -6,6 +6,7 @@ export interface IPreferences extends Document {
   riskTolerance: "low" | "moderate" | "high";
   investmentGoals: string[];
   favoriteCryptos: string[];
+  contentTypes?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,6 +37,11 @@ const preferencesSchema = new Schema<IPreferences>(
     favoriteCryptos: {
       type: [String],
       required: true,
+      default: [],
+    },
+    contentTypes: {
+      type: [String],
+      required: false,
       default: [],
     },
   },

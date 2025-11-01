@@ -9,6 +9,7 @@ import { fetchTrendingMemes } from "../services/memesService";
 /**
  * Get personalized dashboard data
  * Returns 4 sections: Market Overview, News, AI Analysis, Memes
+ * If preferences don't exist, returns data with requiresOnboarding flag
  */
 export const getDashboard = async (
   req: AuthRequest,
@@ -26,40 +27,35 @@ export const getDashboard = async (
     // Get user preferences
     const preferences = await Preferences.findOne({ userId: req.user.id });
 
-    if (!preferences) {
-      res.status(404).json({
-        success: false,
-        error: { message: "User preferences not found. Please complete onboarding." },
-      });
-      return;
-    }
-
-    // Fetch all dashboard sections in parallel
+    // Fetch all dashboard sections in parallel (always fetch, even without preferences)
     const [marketData, newsData, memesData] = await Promise.all([
       fetchTopCryptos(10),
       fetchLatestNews(10),
       fetchTrendingMemes(5),
     ]);
 
-    // Get AI analysis based on preferences and market data
+    // Get AI analysis if preferences exist
     let aiAnalysis = "";
-    try {
-      aiAnalysis = await getAIAnalysis(
-        {
-          experienceLevel: preferences.experienceLevel,
-          riskTolerance: preferences.riskTolerance,
-          favoriteCryptos: preferences.favoriteCryptos,
-        },
-        marketData
-      );
-    } catch (error) {
-      console.error("AI analysis error:", error);
-      aiAnalysis = "AI analysis temporarily unavailable.";
+    if (preferences) {
+      try {
+        aiAnalysis = await getAIAnalysis(
+          {
+            experienceLevel: preferences.experienceLevel,
+            riskTolerance: preferences.riskTolerance,
+            favoriteCryptos: preferences.favoriteCryptos,
+          },
+          marketData
+        );
+      } catch (error) {
+        console.error("AI analysis error:", error);
+        aiAnalysis = "AI analysis temporarily unavailable.";
+      }
     }
 
     res.status(200).json({
       success: true,
       data: {
+        requiresOnboarding: !preferences,
         marketOverview: {
           title: "Market Overview",
           cryptos: marketData,
@@ -70,7 +66,7 @@ export const getDashboard = async (
         },
         aiAnalysis: {
           title: "AI Advisor",
-          content: aiAnalysis,
+          content: aiAnalysis || "Complete onboarding to unlock personalized AI insights.",
         },
         memes: {
           title: "Trending Memes",
@@ -86,4 +82,3 @@ export const getDashboard = async (
     });
   }
 };
-

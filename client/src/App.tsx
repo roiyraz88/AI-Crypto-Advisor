@@ -11,41 +11,22 @@ import DashboardPage from "./pages/Dashboard/DashboardPage";
 function App() {
   const { fetchUser, isAuthenticated } = useAuthStore();
 
-  // Check if user is authenticated on app load
   useEffect(() => {
-    // Try to restore session by calling /me which will auto-refresh if needed
-    // Check for refreshToken as the access token might be expired
-    if (document.cookie.includes("refreshToken")) {
-      fetchUser();
-    }
+    fetchUser();
   }, [fetchUser]);
 
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public routes */}
         <Route
           path="/login"
-          element={
-            isAuthenticated ? (
-              <Navigate to="/dashboard" replace />
-            ) : (
-              <LoginPage />
-            )
-          }
+          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />}
         />
         <Route
           path="/signup"
-          element={
-            isAuthenticated ? (
-              <Navigate to="/dashboard" replace />
-            ) : (
-              <SignupPage />
-            )
-          }
+          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignupPage />}
         />
 
-        {/* Protected routes with layout */}
         <Route
           path="/onboarding"
           element={
@@ -66,7 +47,6 @@ function App() {
           }
         />
 
-        {/* Default redirect */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

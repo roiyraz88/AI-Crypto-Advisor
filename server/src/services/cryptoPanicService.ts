@@ -1,18 +1,23 @@
 /**
- * CryptoPanic API Service
- * Fetches cryptocurrency news and sentiment data
+ * CryptoPanic API Service (Developer Plan - v2)
  */
 
-interface CryptoPanicNews {
+interface CryptoPanicNewsItem {
   id: number;
   title: string;
   url: string;
   published_at: string;
-  source: string;
+  source: {
+    title: string;
+  };
   votes: {
     negative: number;
     positive: number;
   };
+}
+
+interface CryptoPanicApiResponse {
+  results: CryptoPanicNewsItem[];
 }
 
 export interface NewsData {
@@ -27,27 +32,16 @@ export interface NewsData {
   };
 }
 
-interface CryptoPanicApiResponse {
-  results: CryptoPanicNews[];
-}
-
-/**
- * Fetch latest cryptocurrency news from CryptoPanic
- */
 export const fetchLatestNews = async (limit: number = 10): Promise<NewsData[]> => {
   try {
     const apiKey = process.env.CRYPTOPANIC_API_KEY;
-    if (!apiKey) {
-      throw new Error("CRYPTOPANIC_API_KEY is not configured");
-    }
+    if (!apiKey) throw new Error("CRYPTOPANIC_API_KEY is not configured");
 
-    const response = await fetch(
-      `https://cryptopanic.com/api/v1/posts/?auth_token=${apiKey}&public=true&filter=hot&currencies=USD`
-    );
+    const url = `https://cryptopanic.com/api/developer/v2/posts/`;
 
-    if (!response.ok) {
-      throw new Error("Failed to fetch data from CryptoPanic");
-    }
+    const response = await fetch(`${url}?auth_token=${apiKey}&filter=news&public=true`);
+
+    if (!response.ok) throw new Error("Failed to fetch data from CryptoPanic");
 
     const data = (await response.json()) as CryptoPanicApiResponse;
 
@@ -58,10 +52,10 @@ export const fetchLatestNews = async (limit: number = 10): Promise<NewsData[]> =
       title: item.title,
       url: item.url,
       publishedAt: item.published_at,
-      source: item.source,
+      source: item.source?.title ?? "Unknown",
       sentiment: {
-        negative: item.votes.negative,
-        positive: item.votes.positive,
+        negative: item.votes?.negative ?? 0,
+        positive: item.votes?.positive ?? 0,
       },
     }));
   } catch (error) {
@@ -70,9 +64,6 @@ export const fetchLatestNews = async (limit: number = 10): Promise<NewsData[]> =
   }
 };
 
-/**
- * Fallback data if CryptoPanic API fails
- */
 const loadFallbackNews = (limit: number): NewsData[] => {
   const fallback: NewsData[] = [
     {

@@ -37,6 +37,7 @@ export const getPreferences = async (
           riskTolerance: preferences.riskTolerance,
           investmentGoals: preferences.investmentGoals,
           favoriteCryptos: preferences.favoriteCryptos,
+          contentTypes: preferences.contentTypes || [],
         },
       },
     });
@@ -65,7 +66,7 @@ export const savePreferences = async (
       return;
     }
 
-    const { experienceLevel, riskTolerance, investmentGoals, favoriteCryptos } =
+    const { experienceLevel, riskTolerance, investmentGoals, favoriteCryptos, contentTypes } =
       req.body;
 
     // Find or create preferences
@@ -77,6 +78,7 @@ export const savePreferences = async (
       preferences.riskTolerance = riskTolerance;
       preferences.investmentGoals = investmentGoals;
       preferences.favoriteCryptos = favoriteCryptos;
+      preferences.contentTypes = contentTypes || [];
       await preferences.save();
     } else {
       // Create new preferences
@@ -86,6 +88,7 @@ export const savePreferences = async (
         riskTolerance,
         investmentGoals,
         favoriteCryptos,
+        contentTypes: contentTypes || [],
       });
       await preferences.save();
     }
@@ -98,6 +101,7 @@ export const savePreferences = async (
           riskTolerance: preferences.riskTolerance,
           investmentGoals: preferences.investmentGoals,
           favoriteCryptos: preferences.favoriteCryptos,
+          contentTypes: preferences.contentTypes || [],
         },
       },
     });

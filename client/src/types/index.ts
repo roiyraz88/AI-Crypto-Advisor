@@ -57,6 +57,7 @@ export interface PreferencesRequest {
   riskTolerance: RiskTolerance;
   investmentGoals: string[];
   favoriteCryptos: string[];
+  contentTypes?: ContentType[];
 }
 
 /**

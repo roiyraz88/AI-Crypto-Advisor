@@ -110,6 +110,7 @@ const OnboardingPage = () => {
         riskTolerance,
         investmentGoals: [investorType as string].filter(Boolean),
         favoriteCryptos: selectedCryptos,
+        contentTypes: contentTypes,
       });
 
       navigate("/dashboard");

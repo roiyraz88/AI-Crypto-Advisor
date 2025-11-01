@@ -10,7 +10,6 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
 
-  // Actions
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -24,131 +23,68 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoading: false,
   error: null,
 
-  login: async (email: string, password: string) => {
+  login: async (email, password) => {
     try {
       set({ isLoading: true, error: null });
-      const response = await authApi.login({ email, password });
-
-      if (response.success && response.data) {
-        set({
-          user: response.data.user,
-          isAuthenticated: true,
-          isLoading: false,
-          error: null,
-        });
-        // Fetch user preferences after successful login
-        try {
-          await usePreferencesStore.getState().fetchPreferences();
-        } catch (prefError) {
-          // Preferences not found is OK (means onboarding needed)
-          console.log("Preferences not found, onboarding required");
-        }
+      const res = await authApi.login({ email, password });
+      if (res.success && res.data) {
+        set({ user: res.data.user, isAuthenticated: true, isLoading: false });
+        await usePreferencesStore.getState().fetchPreferences().catch(() => {});
       }
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Failed to login. Please check your credentials.";
+    } catch (e: any) {
       set({
-        error: errorMessage,
+        error: e?.message ?? "Failed to login. Please check your credentials.",
         isLoading: false,
         isAuthenticated: false,
         user: null,
       });
-      throw error;
+      throw e;
     }
   },
 
-  register: async (email: string, password: string, name: string) => {
+  register: async (email, password, name) => {
     try {
       set({ isLoading: true, error: null });
-      const response = await authApi.register({ email, password, name });
-
-      if (response.success && response.data) {
-        set({
-          user: response.data.user,
-          isAuthenticated: true,
-          isLoading: false,
-          error: null,
-        });
-        // New users won't have preferences yet, but try to fetch anyway
-        try {
-          await usePreferencesStore.getState().fetchPreferences();
-        } catch (prefError) {
-          // Preferences not found is OK for new users
-          console.log("Preferences not found for new user");
-        }
+      const res = await authApi.register({ email, password, name });
+      if (res.success && res.data) {
+        set({ user: res.data.user, isAuthenticated: true, isLoading: false });
+        await usePreferencesStore.getState().fetchPreferences().catch(() => {});
       }
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Failed to register. Please try again.";
+    } catch (e: any) {
       set({
-        error: errorMessage,
+        error: e?.message ?? "Failed to register. Please try again.",
         isLoading: false,
         isAuthenticated: false,
         user: null,
       });
-      throw error;
+      throw e;
     }
   },
 
   logout: async () => {
     try {
       await authApi.logout();
-    } catch (error) {
-      console.error("Logout error:", error);
-    } finally {
-      Cookies.remove("token");
-      Cookies.remove("refreshToken");
-      set({
-        user: null,
-        isAuthenticated: false,
-        error: null,
-      });
-      // Clear preferences from store on logout
-      usePreferencesStore.getState().clearPreferences();
-    }
+    } catch {}
+    Cookies.remove("token");
+    Cookies.remove("refreshToken");
+    set({ user: null, isAuthenticated: false, error: null });
+    usePreferencesStore.getState().clearPreferences();
   },
 
   fetchUser: async () => {
     try {
       set({ isLoading: true });
-      const response = await authApi.getMe();
-
-      if (response.success && response.data) {
-        set({
-          user: response.data.user,
-          isAuthenticated: true,
-          isLoading: false,
-          error: null,
-        });
-        // Fetch user preferences after successful authentication
-        try {
-          await usePreferencesStore.getState().fetchPreferences();
-        } catch (prefError) {
-          // Preferences not found is OK (means onboarding needed)
-          console.log("Preferences not found, onboarding required");
-        }
+      const res = await authApi.getMe(); // אם 401, האינטרספטור ינסה refresh
+      if (res.success && res.data) {
+        set({ user: res.data.user, isAuthenticated: true, isLoading: false, error: null });
+        await usePreferencesStore.getState().fetchPreferences().catch(() => {});
       } else {
-        set({
-          isAuthenticated: false,
-          user: null,
-          isLoading: false,
-        });
+        set({ isAuthenticated: false, user: null, isLoading: false });
       }
-    } catch (error) {
-      set({
-        isAuthenticated: false,
-        user: null,
-        isLoading: false,
-      });
+    } catch {
+      set({ isAuthenticated: false, user: null, isLoading: false });
     }
   },
 
-  clearError: () => {
-    set({ error: null });
-  },
+  clearError: () => set({ error: null }),
 }));
-

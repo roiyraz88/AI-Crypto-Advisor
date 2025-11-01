@@ -1,29 +1,28 @@
 import { Router } from "express";
-import healthRoutes from "./healthRoutes";
 import authRoutes from "./authRoutes";
-import userRoutes from "./userRoutes";
-import preferencesRoutes from "./preferencesRoutes";
-import dashboardRoutes from "./dashboardRoutes";
-import votingRoutes from "./votingRoutes";
+import { requireAuth } from "../middleware/requireAuth";
+import { getDashboard } from "../controllers/dashboardController";
+import { getPreferences, savePreferences } from "../controllers/preferencesController";
 
 const router = Router();
 
-// Health check route
-router.use("/", healthRoutes);
-
-// Auth routes
+// Auth
 router.use("/auth", authRoutes);
 
-// User routes
-router.use("", userRoutes);
+// Health-check (אופציונלי)
+router.get("/health", (_req, res) => res.json({ ok: true }));
 
-// Preferences routes
-router.use("", preferencesRoutes);
+// מחזיר יוזר אם יש טוקן
+router.get("/me", requireAuth, async (req, res) => {
+  const u = (req as any).user;
+  res.json({ success: true, data: { user: u } });
+});
 
-// Dashboard routes
-router.use("", dashboardRoutes);
+// Preferences
+router.get("/preferences", requireAuth, getPreferences);
+router.post("/preferences", requireAuth, savePreferences);
 
-// Voting routes
-router.use("", votingRoutes);
+// Dashboard
+router.get("/dashboard", requireAuth, getDashboard);
 
 export default router;
