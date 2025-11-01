@@ -1,0 +1,72 @@
+### AI Crypto Advisor API - Sample Requests
+
+### Health Check
+GET http://localhost:5000/health
+
+###
+
+### Register User
+POST http://localhost:5000/auth/register
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "name": "John Doe"
+}
+
+###
+
+### Login
+POST http://localhost:5000/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+
+###
+
+### Get Current User (requires authentication)
+GET http://localhost:5000/me
+Cookie: token=your-jwt-token-here
+
+###
+
+### Save Preferences (requires authentication)
+POST http://localhost:5000/preferences
+Content-Type: application/json
+Cookie: token=your-jwt-token-here
+
+{
+  "experienceLevel": "intermediate",
+  "riskTolerance": "moderate",
+  "investmentGoals": ["long-term", "trading"],
+  "favoriteCryptos": ["bitcoin", "ethereum"]
+}
+
+###
+
+### Get Dashboard (requires authentication)
+GET http://localhost:5000/dashboard
+Cookie: token=your-jwt-token-here
+
+###
+
+### Vote (requires authentication)
+POST http://localhost:5000/vote
+Content-Type: application/json
+Cookie: token=your-jwt-token-here
+
+{
+  "contentId": "article-123",
+  "vote": "up"
+}
+
+###
+
+### Logout
+POST http://localhost:5000/auth/logout
+Cookie: token=your-jwt-token-here
+
