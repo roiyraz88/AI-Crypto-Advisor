@@ -18,19 +18,28 @@ export const createApp = (): Express => {
 
 
 const corsOptions = {
-  origin: (
-    origin: string | undefined,
-    cb: (err: Error | null, allow?: boolean) => void
-  ) => {
-    if (!origin) return cb(null, true);
-    if (allowedOrigins.includes(origin)) return cb(null, true);
-    return cb(new Error("Not allowed by CORS"));
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    const allowedOrigins = [
+      process.env.CLIENT_URL,               // Production frontend (Vercel)
+      "http://localhost:5173",              // Local dev
+    ].filter(Boolean);
+
+    if (!origin) {
+      return callback(null, true); // Allow non-browser tools (Postman, server-to-server)
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`Not allowed by CORS: ${origin}`));
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   exposedHeaders: ["Set-Cookie"],
 };
+
 
 
   app.use(cors(corsOptions));
