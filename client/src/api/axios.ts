@@ -13,11 +13,10 @@ const processQueue = (error: AxiosError | null) => {
 };
 
 const axiosInstance = axios.create({
-  // Use VITE_API_URL when provided; otherwise default to the deployed backend URL so
-  // the client works without requiring env vars during quick deploys/testing.
+ 
   baseURL:
     import.meta.env.VITE_API_URL ||
-    "https://ai-crypto-advisor-rr7r.onrender.com",
+    "https://ai-crypto-advisor-r77r.onrender.com",
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });

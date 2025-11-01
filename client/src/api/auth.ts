@@ -37,7 +37,7 @@ export const authApi = {
  
   getMe: async (): Promise<ApiResponse<{ user: User }>> => {
     const response = await axiosInstance.get<ApiResponse<{ user: User }>>(
-      "/me"
+      "/auth/me"
     );
     return response.data;
   },
