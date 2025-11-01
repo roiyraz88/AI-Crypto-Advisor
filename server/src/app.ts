@@ -1,7 +1,7 @@
 import express, { Express } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import routes from "./routes";
+import routes from "./routes/index";
 import { errorHandler } from "./middleware/errorHandler";
 import { notFoundHandler } from "./middleware/notFoundHandler";
 
