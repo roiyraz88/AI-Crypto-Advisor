@@ -15,8 +15,7 @@ const processQueue = (error: AxiosError | null) => {
 const axiosInstance = axios.create({
  
   baseURL:
-    import.meta.env.VITE_API_URL ||
-    "https://ai-crypto-advisor-r77r.onrender.com",
+    "https://ai-crypto-advisor-rr7r.onrender.com",
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });
