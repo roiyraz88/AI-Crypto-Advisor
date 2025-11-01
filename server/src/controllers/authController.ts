@@ -14,10 +14,16 @@ const getCookieOptions = (maxAge: number) => {
 
   return {
     httpOnly: true,
-    secure: isProd || forceSecure,         
+    secure: isProd || forceSecure,
     sameSite: (isProd ? "none" : "lax") as "none" | "lax" | "strict",
     maxAge,
     path: "/",
+    // In production, default the cookie domain to the backend host if not
+    // explicitly provided via COOKIE_DOMAIN env var. This helps when deploying
+    // to hosts like Render where cookies should be scoped to the backend domain.
+    domain: isProd
+      ? process.env.COOKIE_DOMAIN || "ai-crypto-advisor-rr7r.onrender.com"
+      : undefined,
   };
 };
 
@@ -30,7 +36,12 @@ export const register = async (
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      res.status(400).json({ success: false, error: { message: "User with this email already exists" } });
+      res
+        .status(400)
+        .json({
+          success: false,
+          error: { message: "User with this email already exists" },
+        });
       return;
     }
 
@@ -51,15 +62,23 @@ export const register = async (
 
     const accessToken = generateAccessToken(user._id.toString());
     res.cookie("token", accessToken, getCookieOptions(15 * 60 * 1000));
-    res.cookie("refreshToken", refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
+    res.cookie(
+      "refreshToken",
+      refreshToken,
+      getCookieOptions(7 * 24 * 60 * 60 * 1000)
+    );
 
     res.status(201).json({
       success: true,
-      data: { user: { id: user._id.toString(), email: user.email, name: user.name } },
+      data: {
+        user: { id: user._id.toString(), email: user.email, name: user.name },
+      },
     });
   } catch (e) {
     console.error("Registration error:", e);
-    res.status(500).json({ success: false, error: { message: "Failed to register user" } });
+    res
+      .status(500)
+      .json({ success: false, error: { message: "Failed to register user" } });
   }
 };
 
@@ -72,7 +91,12 @@ export const login = async (
     const user = await User.findOne({ email });
 
     if (!user || !(await comparePassword(password, user.password))) {
-      res.status(401).json({ success: false, error: { message: "Invalid email or password" } });
+      res
+        .status(401)
+        .json({
+          success: false,
+          error: { message: "Invalid email or password" },
+        });
       return;
     }
 
@@ -83,15 +107,23 @@ export const login = async (
 
     const accessToken = generateAccessToken(user._id.toString());
     res.cookie("token", accessToken, getCookieOptions(15 * 60 * 1000));
-    res.cookie("refreshToken", refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
+    res.cookie(
+      "refreshToken",
+      refreshToken,
+      getCookieOptions(7 * 24 * 60 * 60 * 1000)
+    );
 
     res.status(200).json({
       success: true,
-      data: { user: { id: user._id.toString(), email: user.email, name: user.name } },
+      data: {
+        user: { id: user._id.toString(), email: user.email, name: user.name },
+      },
     });
   } catch (e) {
     console.error("Login error:", e);
-    res.status(500).json({ success: false, error: { message: "Failed to login" } });
+    res
+      .status(500)
+      .json({ success: false, error: { message: "Failed to login" } });
   }
 };
 
@@ -102,7 +134,12 @@ export const refresh = async (
   try {
     const { refreshToken } = req.cookies;
     if (!refreshToken) {
-      res.status(401).json({ success: false, error: { message: "Refresh token not provided" } });
+      res
+        .status(401)
+        .json({
+          success: false,
+          error: { message: "Refresh token not provided" },
+        });
       return;
     }
 
@@ -112,7 +149,9 @@ export const refresh = async (
     if (!user) {
       res.clearCookie("token", getCookieOptions(0));
       res.clearCookie("refreshToken", getCookieOptions(0));
-      res.status(401).json({ success: false, error: { message: "Invalid refresh token" } });
+      res
+        .status(401)
+        .json({ success: false, error: { message: "Invalid refresh token" } });
       return;
     }
 
@@ -122,7 +161,9 @@ export const refresh = async (
       await user.save();
       res.clearCookie("token", getCookieOptions(0));
       res.clearCookie("refreshToken", getCookieOptions(0));
-      res.status(401).json({ success: false, error: { message: "Refresh token expired" } });
+      res
+        .status(401)
+        .json({ success: false, error: { message: "Refresh token expired" } });
       return;
     }
 
@@ -131,11 +172,15 @@ export const refresh = async (
 
     res.status(200).json({
       success: true,
-      data: { user: { id: user._id.toString(), email: user.email, name: user.name } },
+      data: {
+        user: { id: user._id.toString(), email: user.email, name: user.name },
+      },
     });
   } catch (e) {
     console.error("Refresh token error:", e);
-    res.status(500).json({ success: false, error: { message: "Failed to refresh token" } });
+    res
+      .status(500)
+      .json({ success: false, error: { message: "Failed to refresh token" } });
   }
 };
 
@@ -160,6 +205,8 @@ export const logout = async (
     res.status(200).json({ success: true, message: "Logged out successfully" });
   } catch (e) {
     console.error("Logout error:", e);
-    res.status(500).json({ success: false, error: { message: "Failed to logout" } });
+    res
+      .status(500)
+      .json({ success: false, error: { message: "Failed to logout" } });
   }
 };
